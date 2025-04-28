@@ -1,0 +1,242 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+local healthEnabled = false
+
+-- Create GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "HealthMenu"
+gui.ResetOnSpawn = false
+gui.Parent = player.PlayerGui
+
+-- Main Frame with gradient
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 250, 0, 150)
+mainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = gui
+
+-- Gradient background
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 65)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(35, 35, 50))
+})
+gradient.Rotation = 45
+gradient.Parent = mainFrame
+
+-- Make corners rounded
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = mainFrame
+
+-- Add shadow
+local shadow = Instance.new("ImageLabel")
+shadow.Name = "Shadow"
+shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+shadow.BackgroundTransparency = 1
+shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+shadow.Size = UDim2.new(1, 30, 1, 30)
+shadow.ZIndex = -1
+shadow.Image = "rbxassetid://7912134082"
+shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+shadow.ImageTransparency = 0.6
+shadow.Parent = mainFrame
+
+-- Title with animation
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, -20, 0, 30)
+title.Position = UDim2.new(0, 10, 0, 10)
+title.BackgroundTransparency = 1
+title.Text = "Stealer health % $HD"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 20
+title.Font = Enum.Font.GothamBold
+title.Parent = mainFrame
+
+-- Subtitle with typing animation
+local subtitle = Instance.new("TextLabel")
+subtitle.Name = "Subtitle"
+subtitle.Size = UDim2.new(1, -20, 0, 20)
+subtitle.Position = UDim2.new(0, 10, 0, 35)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = ""
+subtitle.TextColor3 = Color3.fromRGB(200, 200, 200)
+subtitle.TextSize = 14
+subtitle.Font = Enum.Font.GothamSemibold
+subtitle.Parent = mainFrame
+
+-- Health Display with style
+local healthLabel = Instance.new("TextLabel")
+healthLabel.Name = "HealthLabel"
+healthLabel.Size = UDim2.new(1, -20, 0, 30)
+healthLabel.Position = UDim2.new(0, 10, 0, 60)
+healthLabel.BackgroundTransparency = 1
+healthLabel.Text = "Health: 100%"
+healthLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+healthLabel.TextSize = 18
+healthLabel.Font = Enum.Font.GothamSemibold
+healthLabel.Parent = mainFrame
+
+-- Stylish Toggle Button
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "ToggleButton"
+toggleButton.Size = UDim2.new(0.8, 0, 0, 30)
+toggleButton.Position = UDim2.new(0.1, 0, 0.7, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(65, 165, 65)
+toggleButton.Text = "Enable Health Check"
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.GothamSemibold
+toggleButton.TextSize = 14
+toggleButton.AutoButtonColor = false
+toggleButton.Parent = mainFrame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = toggleButton
+
+-- Modern Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 24, 0, 24)
+closeButton.Position = UDim2.new(1, -30, 0, 6)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+closeButton.Text = "×"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 20
+closeButton.Parent = mainFrame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 6)
+closeCorner.Parent = closeButton
+
+-- Typing animation function
+local function typeText(text)
+    local fullText = " by ilyatracher"
+    local currentText = ""
+    
+    -- Type text
+    for i = 1, #fullText do
+        currentText = fullText:sub(1, i)
+        subtitle.Text = currentText
+        wait(0.05)
+    end
+    
+    wait(1)
+    
+    -- Erase text
+    for i = #fullText, 1, -1 do
+        currentText = fullText:sub(1, i)
+        subtitle.Text = currentText
+        wait(0.03)
+    end
+    
+    wait(0.5)
+    typeText() -- Restart animation
+end
+
+-- Button hover effects
+local function createButtonEffect(button)
+    local originalColor = button.BackgroundColor3
+    
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.3), {
+            BackgroundColor3 = button.BackgroundColor3:Lerp(Color3.new(1, 1, 1), 0.2)
+        }):Play()
+    end)
+    
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.3), {
+            BackgroundColor3 = originalColor
+        }):Play()
+    end)
+end
+
+createButtonEffect(toggleButton)
+createButtonEffect(closeButton)
+
+-- Start typing animation
+coroutine.wrap(typeText)()
+
+-- [Rest of the previous code for dragging and functionality remains the same]
+
+
+-- Make GUI draggable
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Health check function
+local function onCharacterAdded(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    
+    local function checkHealth()
+        if healthEnabled and humanoid.Health < (humanoid.MaxHealth * 0.25) then
+            humanoid.Health = 0
+        end
+        local healthPercent = math.floor((humanoid.Health / humanoid.MaxHealth) * 100)
+        healthLabel.Text = "Health: " .. healthPercent .. "%"
+    end
+    
+    humanoid.HealthChanged:Connect(checkHealth)
+    checkHealth()
+end
+
+-- Toggle functionality
+toggleButton.MouseButton1Click:Connect(function()
+    healthEnabled = not healthEnabled
+    toggleButton.BackgroundColor3 = healthEnabled and 
+        Color3.fromRGB(165, 65, 65) or 
+        Color3.fromRGB(65, 165, 65)
+    toggleButton.Text = healthEnabled and 
+        "Disable Health Check" or 
+        "Enable Health Check"
+end)
+
+-- Close button functionality
+closeButton.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- Toggle GUI visibility with Insert key
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Insert then
+        gui.Enabled = not gui.Enabled
+    end
+end)
+
+-- Initialize
+player.CharacterAdded:Connect(onCharacterAdded)
+if player.Character then
+    onCharacterAdded(player.Character)
+end
