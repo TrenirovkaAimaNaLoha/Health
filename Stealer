@@ -32,6 +32,34 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 12)
 corner.Parent = mainFrame
 
+-- Mobile Toggle Button
+local mobileToggle = Instance.new("ImageButton")
+mobileToggle.Name = "MobileToggle"
+mobileToggle.Size = UDim2.new(0, 50, 0, 50)
+mobileToggle.Position = UDim2.new(0.05, 0, 0.8, 0)
+mobileToggle.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+mobileToggle.Image = "rbxassetid://7059346373" -- Menu icon
+mobileToggle.ImageColor3 = Color3.fromRGB(255, 255, 255)
+mobileToggle.Parent = gui
+
+-- Make mobile toggle button round
+local mobileToggleCorner = Instance.new("UICorner")
+mobileToggleCorner.CornerRadius = UDim.new(1, 0)
+mobileToggleCorner.Parent = mobileToggle
+
+-- Add shadow to mobile toggle
+local mobileToggleShadow = Instance.new("ImageLabel")
+mobileToggleShadow.Name = "Shadow"
+mobileToggleShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+mobileToggleShadow.BackgroundTransparency = 1
+mobileToggleShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+mobileToggleShadow.Size = UDim2.new(1, 10, 1, 10)
+mobileToggleShadow.ZIndex = -1
+mobileToggleShadow.Image = "rbxassetid://7912134082"
+mobileToggleShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+mobileToggleShadow.ImageTransparency = 0.6
+mobileToggleShadow.Parent = mobileToggle
+
 -- Add shadow
 local shadow = Instance.new("ImageLabel")
 shadow.Name = "Shadow"
@@ -114,6 +142,75 @@ local closeCorner = Instance.new("UICorner")
 closeCorner.CornerRadius = UDim.new(0, 6)
 closeCorner.Parent = closeButton
 
+local function enableDragging(frame)
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+    
+    local function updateDrag(input)
+        if dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end
+    
+    frame.InputBegan:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or
+            input.UserInputType == Enum.UserInputType.Touch) then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseMovement or
+            input.UserInputType == Enum.UserInputType.Touch) then
+            updateDrag(input)
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if (input.UserInputType == Enum.UserInputType.MouseButton1 or
+            input.UserInputType == Enum.UserInputType.Touch) then
+            dragging = false
+        end
+    end)
+end
+
+-- Apply dragging to mainFrame
+enableDragging(mainFrame)
+
+-- Mobile toggle button functionality
+mobileToggle.TouchTap:Connect(function()
+    gui.MainFrame.Visible = not gui.MainFrame.Visible
+    
+    -- Animate the toggle button
+    TweenService:Create(mobileToggle, TweenInfo.new(0.3), {
+        Rotation = mobileToggle.Rotation + 180
+    }):Play()
+end)
+
+-- Check if device is mobile
+local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+
+-- Show/hide appropriate controls based on device
+mobileToggle.Visible = isMobile
+if isMobile then
+    -- Hide the original GUI initially on mobile
+    mainFrame.Visible = false
+else
+    -- Hide mobile toggle on desktop
+    mobileToggle.Visible = false
+    mainFrame.Visible = true
+end
+
+
 -- Typing animation function
 local function typeText(text)
     local fullText = " by ilyatracher"
@@ -156,8 +253,20 @@ local function createButtonEffect(button)
     end)
 end
 
+local function addRainbowEffect(textLabel)
+    local hue = 0
+    
+    game:GetService("RunService").Heartbeat:Connect(function()
+        hue = (hue + 1) % 360
+        textLabel.TextColor3 = Color3.fromHSV(hue/360, 1, 1)
+    end)
+end
+
+
+
 createButtonEffect(toggleButton)
 createButtonEffect(closeButton)
+addRainbowEffect(title)
 
 -- Start typing animation
 coroutine.wrap(typeText)()
